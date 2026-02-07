@@ -66,14 +66,13 @@
     position: absolute;
     z-index: 10;
     pointer-events: none;
-    /* Position so finger tip lands at top-center of wheel */
-    /* Finger is at ~70% from left, ~36% from top of image */
-    /* At 380px tall: finger is at 266px from left, 137px from top */
-    /* Wheel center-x is 220px, top of wheel pegs ~36px from container top */
-    /* So: left = 220 - 266 = -46px, top = 36 - 137 = -101px */
-    left: -46px;
-    top: -101px;
-    transform-origin: 70% 36%; /* pivot at finger tip */
+    /* Finger tip is at 70%, 34% of image */
+    /* At 380px tall: finger at (179px, 129px) from image top-left */
+    /* Wheel top-center peg zone: (220px, 30px) in container coords */
+    /* left = 220 - 179 = 41,  top = 30 - 129 = -99 */
+    left: 41px;
+    top: -99px;
+    transform-origin: 70% 34%; /* pivot at finger tip */
     transition: transform 0.06s ease-out;
   }
 
