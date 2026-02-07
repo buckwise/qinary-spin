@@ -61,19 +61,13 @@
     z-index: 2;
   }
 
-  /* Buck's cutout — absolutely positioned so finger = pointer */
+  /* Buck's cutout — absolutely positioned so finger points at names */
   .host-cutout {
     position: absolute;
     z-index: 10;
     pointer-events: none;
-    /* Finger tip is at 70%, 34% of image */
-    /* At 380px tall: finger at (179px, 129px) from image top-left */
-    /* Wheel top-center peg zone: (220px, 30px) in container coords */
-    /* left = 220 - 179 = 41,  top = 30 - 129 = -99 */
-    left: 41px;
-    top: -99px;
-    transform-origin: 70% 34%; /* pivot at finger tip */
-    transition: transform 0.06s ease-out;
+    left: -9px;
+    top: 21px;
   }
 
   .host-cutout img {
@@ -82,8 +76,26 @@
     filter: drop-shadow(4px 4px 20px rgba(0,0,0,0.8));
   }
 
-  .host-cutout.flick {
-    transform: rotate(1.5deg);
+  /* Finger-only layer: clipped to just the hand/arm, sits on top and flicks */
+  .finger-layer {
+    position: absolute;
+    z-index: 11;
+    pointer-events: none;
+    left: -9px;
+    top: 21px;
+    /* Clip to just the arm + hand area (upper-right quadrant) */
+    clip-path: polygon(35% 0%, 100% 0%, 100% 50%, 35% 50%);
+    transform-origin: 70% 34%;
+    transition: transform 0.06s ease-out;
+  }
+
+  .finger-layer img {
+    height: 380px;
+    width: auto;
+  }
+
+  .finger-layer.flick {
+    transform: rotate(3deg);
     transition: transform 0.03s ease-in;
   }
 
@@ -585,6 +597,9 @@
     <div class="host-cutout" id="hostCutout">
       <img src="buck-pointing.png" alt="Buck">
     </div>
+    <div class="finger-layer" id="fingerLayer">
+      <img src="buck-pointing.png" alt="">
+    </div>
     <div class="wheel-3d-wrapper">
       <div class="wheel-shadow"></div>
       <div class="outer-bezel"></div>
@@ -660,7 +675,7 @@ logoImg.onload = () => { logoLoaded = true; drawWheel(activeNames, currentAngle)
 
 // ---- AUDIO ----
 let audioCtx = null;
-const pointerEl = document.getElementById('hostCutout');
+const pointerEl = document.getElementById('fingerLayer');
 
 // iOS requires AudioContext to be created/resumed from a user gesture
 document.addEventListener('touchstart', function initAudio() {
