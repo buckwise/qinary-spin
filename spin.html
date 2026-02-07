@@ -76,17 +76,17 @@
     filter: drop-shadow(4px 4px 20px rgba(0,0,0,0.8));
   }
 
-  /* Finger-only layer: clipped to JUST the hand+wrist, sits on top and flicks */
+  /* Finger-only layer: clipped to forearm+hand, sits on top and flicks */
   .finger-layer {
     position: absolute;
     z-index: 11;
     pointer-events: none;
     left: -9px;
     top: 21px;
-    /* Tight clip around just the hand, wrist, and fingertip */
-    clip-path: polygon(52% 26%, 72% 26%, 72% 40%, 52% 40%);
-    transform-origin: 70% 34%;
-    transition: transform 0.06s ease-out;
+    /* Clip forearm from elbow to fingertip */
+    clip-path: polygon(44% 22%, 74% 22%, 74% 42%, 44% 42%);
+    transform-origin: 48% 35%;
+    transition: transform 0.08s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .finger-layer img {
@@ -95,8 +95,8 @@
   }
 
   .finger-layer.flick {
-    transform: rotate(2deg);
-    transition: transform 0.03s ease-in;
+    transform: rotate(-6deg);
+    transition: transform 0.04s ease-in;
   }
 
   /* ---- 3D WHEEL CONTAINER ---- */
@@ -630,11 +630,12 @@
         </svg>
       </div>
       <div class="center-hub"><img src="q-logo.png" alt="Q"></div>
-      <div class="winner-popup" id="winnerPopup">
-        <div class="winner-name" id="winnerName"></div>
-        <div class="winner-sub">Share your favorite quote!</div>
-        <button class="winner-dismiss" onclick="dismissResult()">Got It</button>
-      </div>
+    </div>
+    <!-- Winner popup OUTSIDE wheel-3d-wrapper so it layers above Buck -->
+    <div class="winner-popup" id="winnerPopup">
+      <div class="winner-name" id="winnerName"></div>
+      <div class="winner-sub">Share your favorite quote!</div>
+      <button class="winner-dismiss" onclick="dismissResult()">Got It</button>
     </div>
   </div>
 </div>
@@ -737,38 +738,80 @@ function playWin() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const t = audioCtx.currentTime;
 
-  // Bright triple-ding chime
-  function ding(freq, start, vol) {
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
+  // Party horn / blower — rising buzzy "pweeeeee!" sound
+  // Main tone: sawtooth wave sweeping up (the horn unrolling)
+  const horn = audioCtx.createOscillator();
+  horn.type = 'sawtooth';
+  horn.frequency.setValueAtTime(280, t);
+  horn.frequency.linearRampToValueAtTime(900, t + 0.6);
+  horn.frequency.setValueAtTime(900, t + 0.6);
+  horn.frequency.linearRampToValueAtTime(600, t + 1.0);
 
-    const osc2 = audioCtx.createOscillator();
-    osc2.type = 'sine';
-    osc2.frequency.value = freq * 2.01; // slight detune for shimmer
+  // Buzzy overtone (paper vibration)
+  const buzz = audioCtx.createOscillator();
+  buzz.type = 'square';
+  buzz.frequency.setValueAtTime(560, t);
+  buzz.frequency.linearRampToValueAtTime(1800, t + 0.6);
+  buzz.frequency.setValueAtTime(1800, t + 0.6);
+  buzz.frequency.linearRampToValueAtTime(1200, t + 1.0);
 
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(vol, t + start);
-    g.gain.exponentialRampToValueAtTime(vol * 0.6, t + start + 0.05);
-    g.gain.exponentialRampToValueAtTime(0.001, t + start + 0.8);
+  // Tremolo for the fluttering paper sound
+  const tremolo = audioCtx.createOscillator();
+  tremolo.type = 'sine';
+  tremolo.frequency.value = 28;
+  const tremoloGain = audioCtx.createGain();
+  tremoloGain.gain.value = 0.3;
+  tremolo.connect(tremoloGain);
 
-    const g2 = audioCtx.createGain();
-    g2.gain.value = vol * 0.15;
+  // Main horn volume envelope
+  const hornGain = audioCtx.createGain();
+  hornGain.gain.setValueAtTime(0.0, t);
+  hornGain.gain.linearRampToValueAtTime(0.13, t + 0.05);
+  hornGain.gain.setValueAtTime(0.13, t + 0.6);
+  hornGain.gain.linearRampToValueAtTime(0.08, t + 0.8);
+  hornGain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
 
-    osc.connect(g);
-    osc2.connect(g2);
-    g2.connect(g);
-    g.connect(audioCtx.destination);
+  // Buzz volume (quieter)
+  const buzzGain = audioCtx.createGain();
+  buzzGain.gain.setValueAtTime(0.0, t);
+  buzzGain.gain.linearRampToValueAtTime(0.04, t + 0.05);
+  buzzGain.gain.setValueAtTime(0.04, t + 0.6);
+  buzzGain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
 
-    osc.start(t + start);
-    osc.stop(t + start + 0.9);
-    osc2.start(t + start);
-    osc2.stop(t + start + 0.9);
-  }
+  // Bandpass to shape the horn tone
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 800;
+  bp.Q.value = 1.5;
 
-  ding(1200, 0.0,  0.12);
-  ding(1500, 0.15, 0.14);
-  ding(1800, 0.30, 0.16);
+  // Connect: horn + tremolo modulation → bandpass → output
+  horn.connect(hornGain);
+  tremoloGain.connect(hornGain.gain);
+  hornGain.connect(bp);
+  bp.connect(audioCtx.destination);
+
+  buzz.connect(buzzGain);
+  buzzGain.connect(audioCtx.destination);
+
+  horn.start(t);
+  horn.stop(t + 1.3);
+  buzz.start(t);
+  buzz.stop(t + 1.1);
+  tremolo.start(t);
+  tremolo.stop(t + 1.3);
+
+  // Add a short bright ding at the end (celebration punctuation)
+  const ding = audioCtx.createOscillator();
+  ding.type = 'sine';
+  ding.frequency.value = 1600;
+  const dingGain = audioCtx.createGain();
+  dingGain.gain.setValueAtTime(0.0, t + 0.8);
+  dingGain.gain.linearRampToValueAtTime(0.1, t + 0.82);
+  dingGain.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+  ding.connect(dingGain);
+  dingGain.connect(audioCtx.destination);
+  ding.start(t + 0.8);
+  ding.stop(t + 1.6);
 }
 
 // ---- EDISON BULBS ----
