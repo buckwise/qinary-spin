@@ -76,17 +76,16 @@
     filter: drop-shadow(4px 4px 20px rgba(0,0,0,0.8));
   }
 
-  /* Finger-only layer: clipped to forearm+hand, sits on top and flicks */
+  /* Finger-only layer: tight clip on just the hand, subtle flick */
   .finger-layer {
     position: absolute;
     z-index: 11;
     pointer-events: none;
     left: -9px;
     top: 21px;
-    /* Clip forearm from elbow to fingertip */
-    clip-path: polygon(44% 22%, 74% 22%, 74% 42%, 44% 42%);
-    transform-origin: 48% 35%;
-    transition: transform 0.08s cubic-bezier(0.34, 1.56, 0.64, 1);
+    clip-path: polygon(56% 28%, 73% 28%, 73% 37%, 56% 37%);
+    transform-origin: 70% 34%;
+    transition: transform 0.06s ease-out;
   }
 
   .finger-layer img {
@@ -95,8 +94,8 @@
   }
 
   .finger-layer.flick {
-    transform: rotate(-6deg);
-    transition: transform 0.04s ease-in;
+    transform: rotate(1.5deg);
+    transition: transform 0.03s ease-in;
   }
 
   /* ---- 3D WHEEL CONTAINER ---- */
@@ -674,144 +673,35 @@ logoImg.src = 'q-logo.png';
 let logoLoaded = false;
 logoImg.onload = () => { logoLoaded = true; drawWheel(activeNames, currentAngle); };
 
-// ---- AUDIO ----
-let audioCtx = null;
+// ---- AUDIO (real sound files) ----
 const pointerEl = document.getElementById('fingerLayer');
 
-// iOS requires AudioContext to be created/resumed from a user gesture
+// Preload sound effects
+const tickSound = new Audio('tick.mp3');
+const hornSound = new Audio('party-horn.mp3');
+tickSound.volume = 0.5;
+hornSound.volume = 0.7;
+
+// iOS requires user gesture to unlock audio
 document.addEventListener('touchstart', function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  tickSound.play().then(() => { tickSound.pause(); tickSound.currentTime = 0; }).catch(() => {});
+  hornSound.load();
   document.removeEventListener('touchstart', initAudio);
 }, { once: true });
 
 function playTick() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const t = audioCtx.currentTime;
-
   pointerEl.classList.add('flick');
   setTimeout(() => pointerEl.classList.remove('flick'), 50);
 
-  const bufferSize = audioCtx.sampleRate * 0.03;
-  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    const env = Math.exp(-i / (bufferSize * 0.08));
-    data[i] = (Math.random() * 2 - 1) * env;
-  }
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = buffer;
-
-  const bp = audioCtx.createBiquadFilter();
-  bp.type = 'bandpass';
-  bp.frequency.value = 2200 + Math.random() * 600;
-  bp.Q.value = 8;
-
-  const hp = audioCtx.createBiquadFilter();
-  hp.type = 'highpass';
-  hp.frequency.value = 800;
-
-  const knockOsc = audioCtx.createOscillator();
-  knockOsc.type = 'sine';
-  knockOsc.frequency.value = 1200 + Math.random() * 300;
-  const knockGain = audioCtx.createGain();
-  knockGain.gain.setValueAtTime(0.06, t);
-  knockGain.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
-  knockOsc.connect(knockGain);
-  knockGain.connect(audioCtx.destination);
-  knockOsc.start(t);
-  knockOsc.stop(t + 0.02);
-
-  const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.12, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
-
-  noise.connect(bp);
-  bp.connect(hp);
-  hp.connect(gain);
-  gain.connect(audioCtx.destination);
-  noise.start(t);
-  noise.stop(t + 0.04);
+  // Clone so overlapping ticks don't cut each other off
+  const t = tickSound.cloneNode();
+  t.volume = 0.4;
+  t.play().catch(() => {});
 }
 
 function playWin() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const t = audioCtx.currentTime;
-
-  // Party horn / blower — rising buzzy "pweeeeee!" sound
-  // Main tone: sawtooth wave sweeping up (the horn unrolling)
-  const horn = audioCtx.createOscillator();
-  horn.type = 'sawtooth';
-  horn.frequency.setValueAtTime(280, t);
-  horn.frequency.linearRampToValueAtTime(900, t + 0.6);
-  horn.frequency.setValueAtTime(900, t + 0.6);
-  horn.frequency.linearRampToValueAtTime(600, t + 1.0);
-
-  // Buzzy overtone (paper vibration)
-  const buzz = audioCtx.createOscillator();
-  buzz.type = 'square';
-  buzz.frequency.setValueAtTime(560, t);
-  buzz.frequency.linearRampToValueAtTime(1800, t + 0.6);
-  buzz.frequency.setValueAtTime(1800, t + 0.6);
-  buzz.frequency.linearRampToValueAtTime(1200, t + 1.0);
-
-  // Tremolo for the fluttering paper sound
-  const tremolo = audioCtx.createOscillator();
-  tremolo.type = 'sine';
-  tremolo.frequency.value = 28;
-  const tremoloGain = audioCtx.createGain();
-  tremoloGain.gain.value = 0.3;
-  tremolo.connect(tremoloGain);
-
-  // Main horn volume envelope
-  const hornGain = audioCtx.createGain();
-  hornGain.gain.setValueAtTime(0.0, t);
-  hornGain.gain.linearRampToValueAtTime(0.13, t + 0.05);
-  hornGain.gain.setValueAtTime(0.13, t + 0.6);
-  hornGain.gain.linearRampToValueAtTime(0.08, t + 0.8);
-  hornGain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
-
-  // Buzz volume (quieter)
-  const buzzGain = audioCtx.createGain();
-  buzzGain.gain.setValueAtTime(0.0, t);
-  buzzGain.gain.linearRampToValueAtTime(0.04, t + 0.05);
-  buzzGain.gain.setValueAtTime(0.04, t + 0.6);
-  buzzGain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
-
-  // Bandpass to shape the horn tone
-  const bp = audioCtx.createBiquadFilter();
-  bp.type = 'bandpass';
-  bp.frequency.value = 800;
-  bp.Q.value = 1.5;
-
-  // Connect: horn + tremolo modulation → bandpass → output
-  horn.connect(hornGain);
-  tremoloGain.connect(hornGain.gain);
-  hornGain.connect(bp);
-  bp.connect(audioCtx.destination);
-
-  buzz.connect(buzzGain);
-  buzzGain.connect(audioCtx.destination);
-
-  horn.start(t);
-  horn.stop(t + 1.3);
-  buzz.start(t);
-  buzz.stop(t + 1.1);
-  tremolo.start(t);
-  tremolo.stop(t + 1.3);
-
-  // Add a short bright ding at the end (celebration punctuation)
-  const ding = audioCtx.createOscillator();
-  ding.type = 'sine';
-  ding.frequency.value = 1600;
-  const dingGain = audioCtx.createGain();
-  dingGain.gain.setValueAtTime(0.0, t + 0.8);
-  dingGain.gain.linearRampToValueAtTime(0.1, t + 0.82);
-  dingGain.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
-  ding.connect(dingGain);
-  dingGain.connect(audioCtx.destination);
-  ding.start(t + 0.8);
-  ding.stop(t + 1.6);
+  hornSound.currentTime = 0;
+  hornSound.play().catch(() => {});
 }
 
 // ---- EDISON BULBS ----
