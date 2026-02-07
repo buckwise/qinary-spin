@@ -83,7 +83,7 @@
   }
 
   .host-cutout.flick {
-    transform: rotate(4deg);
+    transform: rotate(1.5deg);
     transition: transform 0.03s ease-in;
   }
 
@@ -494,11 +494,10 @@
   @media (max-width: 768px) {
     body {
       justify-content: flex-start;
-      padding-top: 16px;
-      overflow-y: auto;
-      height: auto;
-      min-height: 100vh;
-      min-height: 100dvh;
+      padding-top: 8px;
+      overflow: hidden;
+      height: 100vh;
+      height: 100dvh;
     }
 
     .header {
@@ -675,7 +674,7 @@ function playTick() {
   const t = audioCtx.currentTime;
 
   pointerEl.classList.add('flick');
-  setTimeout(() => pointerEl.classList.remove('flick'), 80);
+  setTimeout(() => pointerEl.classList.remove('flick'), 50);
 
   const bufferSize = audioCtx.sampleRate * 0.03;
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
@@ -1204,8 +1203,8 @@ function animateConfetti() {
 function updateWheelScale() {
   if (window.innerWidth <= 768) {
     const vw = window.innerWidth;
-    const padding = 24; // 12px each side
-    const scale = Math.min((vw - padding) / 440, 0.85);
+    const padding = 16; // 8px each side
+    const scale = Math.min((vw - padding) / 440, 0.95);
     document.querySelector('.wheel-container').style.setProperty('--wheel-scale', scale);
     document.querySelector('.wheel-container').style.marginBottom =
       (-440 * (1 - scale)) + 'px';
