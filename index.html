@@ -67,7 +67,7 @@
   .host-cutout {
     position: relative;
     z-index: 3;
-    margin-left: -40px;
+    margin-right: -30px;
     margin-bottom: -10px;
     pointer-events: none;
   }
@@ -75,7 +75,6 @@
   .host-cutout img {
     height: 420px;
     width: auto;
-    transform: scaleX(-1);
     filter: drop-shadow(4px 4px 20px rgba(0,0,0,0.8));
   }
 
@@ -533,13 +532,14 @@
     }
 
     .host-cutout {
-      margin-left: 0;
+      margin-right: 0;
       margin-bottom: 0;
-      margin-top: -20px;
+      margin-top: -10px;
+      order: 2; /* push below wheel on mobile */
     }
 
     .host-cutout img {
-      height: 200px;
+      height: 140px;
     }
 
     .controls {
@@ -579,7 +579,7 @@
     }
 
     .host-cutout img {
-      height: 160px;
+      height: 120px;
     }
 
     .winner-name {
@@ -597,6 +597,10 @@
 </div>
 
 <div class="stage">
+  <div class="host-cutout">
+    <img src="buck-pointing.png" alt="Buck">
+  </div>
+
   <div class="wheel-container" id="wheelContainer">
     <div class="wheel-3d-wrapper">
       <div class="wheel-shadow"></div>
@@ -634,10 +638,6 @@
         <button class="winner-dismiss" onclick="dismissResult()">Got It</button>
       </div>
     </div>
-  </div>
-
-  <div class="host-cutout">
-    <img src="buck.png" alt="Buck">
   </div>
 </div>
 
