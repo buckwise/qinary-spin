@@ -19,6 +19,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    overflow-x: clip;
     position: relative;
   }
 
@@ -58,24 +59,33 @@
   .stage {
     position: relative;
     z-index: 2;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
   }
 
-  /* Buck's cutout image */
+  /* Buck's cutout — absolutely positioned so finger = pointer */
   .host-cutout {
-    position: relative;
-    z-index: 3;
-    margin-right: -30px;
-    margin-bottom: -10px;
+    position: absolute;
+    z-index: 10;
     pointer-events: none;
+    /* Position so finger tip lands at top-center of wheel */
+    /* Finger is at ~70% from left, ~36% from top of image */
+    /* At 380px tall: finger is at 266px from left, 137px from top */
+    /* Wheel center-x is 220px, top of wheel pegs ~36px from container top */
+    /* So: left = 220 - 266 = -46px, top = 36 - 137 = -101px */
+    left: -46px;
+    top: -101px;
+    transform-origin: 70% 36%; /* pivot at finger tip */
+    transition: transform 0.06s ease-out;
   }
 
   .host-cutout img {
-    height: 420px;
+    height: 380px;
     width: auto;
     filter: drop-shadow(4px 4px 20px rgba(0,0,0,0.8));
+  }
+
+  .host-cutout.flick {
+    transform: rotate(4deg);
+    transition: transform 0.03s ease-in;
   }
 
   /* ---- 3D WHEEL CONTAINER ---- */
@@ -85,6 +95,7 @@
     height: 440px;
     flex-shrink: 0;
     perspective: 900px;
+    overflow: visible;
   }
 
   .wheel-3d-wrapper {
@@ -285,21 +296,7 @@
   }
 
   .pointer {
-    position: absolute;
-    top: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    width: 36px;
-    height: 52px;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
-    transform-origin: 50% 8%;
-    transition: transform 0.06s ease-out;
-  }
-
-  .pointer.flick {
-    transform: translateX(-50%) rotate(18deg);
-    transition: transform 0.03s ease-in;
+    display: none; /* replaced by Buck's finger */
   }
 
   .center-hub {
@@ -531,16 +528,7 @@
       margin-bottom: calc(-440px * (1 - var(--wheel-scale, 0.75)));
     }
 
-    .host-cutout {
-      margin-right: 0;
-      margin-bottom: 0;
-      margin-top: -10px;
-      order: 2; /* push below wheel on mobile */
-    }
-
-    .host-cutout img {
-      height: 140px;
-    }
+    /* host-cutout scales with wheel-container transform — no override needed */
 
     .controls {
       margin-top: 12px;
@@ -578,9 +566,7 @@
       margin-bottom: calc(-440px * (1 - 0.65));
     }
 
-    .host-cutout img {
-      height: 120px;
-    }
+    /* host-cutout scales with wheel-container */
 
     .winner-name {
       font-size: 1.8rem;
@@ -597,11 +583,10 @@
 </div>
 
 <div class="stage">
-  <div class="host-cutout">
-    <img src="buck-pointing.png" alt="Buck">
-  </div>
-
   <div class="wheel-container" id="wheelContainer">
+    <div class="host-cutout" id="hostCutout">
+      <img src="buck-pointing.png" alt="Buck">
+    </div>
     <div class="wheel-3d-wrapper">
       <div class="wheel-shadow"></div>
       <div class="outer-bezel"></div>
@@ -677,7 +662,7 @@ logoImg.onload = () => { logoLoaded = true; drawWheel(activeNames, currentAngle)
 
 // ---- AUDIO ----
 let audioCtx = null;
-const pointerEl = document.querySelector('.pointer');
+const pointerEl = document.getElementById('hostCutout');
 
 // iOS requires AudioContext to be created/resumed from a user gesture
 document.addEventListener('touchstart', function initAudio() {
