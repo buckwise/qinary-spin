@@ -76,15 +76,15 @@
     filter: drop-shadow(4px 4px 20px rgba(0,0,0,0.8));
   }
 
-  /* Finger-only layer: clipped to just the hand/arm, sits on top and flicks */
+  /* Finger-only layer: clipped to JUST the hand+wrist, sits on top and flicks */
   .finger-layer {
     position: absolute;
     z-index: 11;
     pointer-events: none;
     left: -9px;
     top: 21px;
-    /* Clip to just the arm + hand area (upper-right quadrant) */
-    clip-path: polygon(35% 0%, 100% 0%, 100% 50%, 35% 50%);
+    /* Tight clip around just the hand, wrist, and fingertip */
+    clip-path: polygon(52% 26%, 72% 26%, 72% 40%, 52% 40%);
     transform-origin: 70% 34%;
     transition: transform 0.06s ease-out;
   }
@@ -95,7 +95,7 @@
   }
 
   .finger-layer.flick {
-    transform: rotate(3deg);
+    transform: rotate(2deg);
     transition: transform 0.03s ease-in;
   }
 
