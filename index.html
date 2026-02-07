@@ -493,8 +493,8 @@
   /* ---- MOBILE RESPONSIVE ---- */
   @media (max-width: 768px) {
     body {
-      justify-content: flex-start;
-      padding-top: 16px;
+      justify-content: center;
+      padding: 12px 0;
       overflow-y: auto;
       height: auto;
       min-height: 100vh;
@@ -502,7 +502,7 @@
     }
 
     .header {
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .header .logo-img {
@@ -522,9 +522,9 @@
     .wheel-container {
       width: 440px;
       height: 440px;
-      transform: scale(var(--wheel-scale, 0.75));
+      transform: scale(var(--wheel-scale, 0.92));
       transform-origin: top center;
-      margin-bottom: calc(-440px * (1 - var(--wheel-scale, 0.75)));
+      margin-bottom: calc(-440px * (1 - var(--wheel-scale, 0.92)));
     }
 
     /* host-cutout scales with wheel-container transform — no override needed */
@@ -561,8 +561,8 @@
   /* Extra small phones */
   @media (max-width: 380px) {
     .wheel-container {
-      --wheel-scale: 0.65;
-      margin-bottom: calc(-440px * (1 - 0.65));
+      --wheel-scale: 0.82;
+      margin-bottom: calc(-440px * (1 - 0.82));
     }
 
     /* host-cutout scales with wheel-container */
@@ -1204,8 +1204,8 @@ function animateConfetti() {
 function updateWheelScale() {
   if (window.innerWidth <= 768) {
     const vw = window.innerWidth;
-    const padding = 24; // 12px each side
-    const scale = Math.min((vw - padding) / 440, 0.85);
+    const padding = 16; // 8px each side
+    const scale = Math.min((vw - padding) / 440, 1);
     document.querySelector('.wheel-container').style.setProperty('--wheel-scale', scale);
     document.querySelector('.wheel-container').style.marginBottom =
       (-440 * (1 - scale)) + 'px';
