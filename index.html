@@ -561,8 +561,8 @@
   /* Extra small phones */
   @media (max-width: 380px) {
     .wheel-container {
-      --wheel-scale: 0.82;
-      margin-bottom: calc(-440px * (1 - 0.82));
+      --wheel-scale: 0.86;
+      margin-bottom: calc(-440px * (1 - 0.86));
     }
 
     /* host-cutout scales with wheel-container */
@@ -1204,8 +1204,7 @@ function animateConfetti() {
 function updateWheelScale() {
   if (window.innerWidth <= 768) {
     const vw = window.innerWidth;
-    const padding = 16; // 8px each side
-    const scale = Math.min((vw - padding) / 440, 1);
+    const scale = Math.min(vw / 440, 1);
     document.querySelector('.wheel-container').style.setProperty('--wheel-scale', scale);
     document.querySelector('.wheel-container').style.marginBottom =
       (-440 * (1 - scale)) + 'px';
