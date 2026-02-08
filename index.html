@@ -41,15 +41,15 @@
   }
 
   .header .logo-img {
-    height: 44px;
+    height: 64px;
     width: auto;
     filter: drop-shadow(0 0 15px rgba(57,255,20,0.2));
   }
 
   .header .subtitle {
-    font-size: 0.65rem;
-    color: rgba(255,255,255,0.3);
-    margin-top: 2px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
     letter-spacing: 3px;
     text-transform: uppercase;
     font-family: 'Oswald', sans-serif;
@@ -654,10 +654,16 @@
 const ALL_NAMES = ['Buck', 'Allison', 'Payton', 'Effie', 'Maddy', 'Neil'];
 const NEON = '#39ff14';
 
-let activeNames = [...ALL_NAMES];
-let usedNames = [];
+// Restore saved state from localStorage (survives browser restart)
+const saved = JSON.parse(localStorage.getItem('spinState') || 'null');
+let activeNames = saved ? saved.activeNames : [...ALL_NAMES];
+let usedNames = saved ? saved.usedNames : [];
 let spinning = false;
 let currentAngle = 0;
+
+function saveState() {
+  localStorage.setItem('spinState', JSON.stringify({ activeNames, usedNames }));
+}
 
 const canvas = document.getElementById('wheelCanvas');
 const ctx = canvas.getContext('2d');
@@ -981,6 +987,7 @@ function dismissResult() {
   activeNames = activeNames.filter(n => n !== name);
   currentAngle = 0;
   drawWheel(activeNames, currentAngle);
+  saveState();
 
   if (activeNames.length === 0) {
     document.getElementById('spinBtn').disabled = true;
@@ -998,6 +1005,7 @@ function resetWheel() {
   document.getElementById('spinBtn').disabled = false;
   document.getElementById('allDone').classList.remove('show');
   drawWheel(activeNames, currentAngle);
+  saveState();
 }
 
 // ---- CONFETTI + SOCIAL ICONS ----
@@ -1166,6 +1174,14 @@ updateWheelScale();
 
 // ---- INIT ----
 drawWheel(activeNames, currentAngle);
+
+// Restore UI state if names were already used
+if (activeNames.length === 0) {
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('allDone').classList.add('show');
+} else if (activeNames.length < ALL_NAMES.length) {
+  document.getElementById('spinBtn').disabled = false;
+}
 </script>
 </body>
 </html>
