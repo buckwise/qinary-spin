@@ -504,8 +504,8 @@
   /* ---- MOBILE RESPONSIVE ---- */
   @media (max-width: 768px) {
     body {
-      justify-content: flex-start;
-      padding-top: 8px;
+      justify-content: center;
+      padding-top: 0;
       overflow: hidden;
       height: 100vh;
       height: 100dvh;
@@ -533,7 +533,7 @@
       width: 440px;
       height: 440px;
       transform: scale(var(--wheel-scale, 0.75));
-      transform-origin: top center;
+      transform-origin: center center;
       margin-bottom: calc(-440px * (1 - var(--wheel-scale, 0.75)));
     }
 
@@ -541,7 +541,7 @@
 
     .controls {
       margin-top: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 0;
     }
 
     .btn {
